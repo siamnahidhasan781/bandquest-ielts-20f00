@@ -111,14 +111,25 @@ export async function callGemini(opts: AiCallOptions): Promise<AiCallResult> {
   }
 
   try {
+    // Netlify free functions die if the upstream hangs — fail fast so the
+    // route can fall back to rule-based feedback instead of timing out.
+    const withTimeout = <T>(p: Promise<T>, ms = 25000): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error("AI_TIMEOUT")), ms)
+        ),
+      ]);
     let result;
     if (opts.audioBase64) {
-      result = await model.generateContent([
-        { text: opts.userPrompt },
-        { inlineData: { data: opts.audioBase64, mimeType: opts.audioMimeType || "audio/webm" } },
-      ]);
+      result = await withTimeout(
+        model.generateContent([
+          { text: opts.userPrompt },
+          { inlineData: { data: opts.audioBase64, mimeType: opts.audioMimeType || "audio/webm" } },
+        ])
+      );
     } else {
-      result = await model.generateContent(opts.userPrompt);
+      result = await withTimeout(model.generateContent(opts.userPrompt));
     }
     const text = result.response.text();
     const usage = result.response.usageMetadata;
