@@ -31,7 +31,7 @@
       "package": "com.bandquest.ielts"
     },
     "extra": {
-      "apiUrl": "https://your-deployment-url",
+      "apiUrl": "https://preeminent-crisp-f9941d.netlify.app",
       "googleClientId": ""
     },
     "icon": "./assets/icon.png",
